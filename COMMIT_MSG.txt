@@ -1,0 +1,8 @@
+feat: AI 요약 기능 구현 (OpenAI GPT-4o-mini 스트리밍)
+
+- OpenAI GPT-4o-mini로 자막 요약 API 구현 (스트리밍 응답)
+- 요약 형식: 핵심 요약 3줄, 주요 내용 bullet, 키워드 태그, 타임라인 요약
+- 10만자 초과 시 앞뒤 잘라서 전송, API 키 누락/Rate limit 에러 처리
+- TranscriptResult에 AI 요약 탭 추가 (react-markdown 렌더링)
+- 스트리밍 타이핑 효과 + 커서 애니메이션 + 분석 중 펄스 로딩
+- 요약 완료 후 복사 버튼 활성화
