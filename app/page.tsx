@@ -1,8 +1,12 @@
+"use client";
+
+import { useState, useRef, useCallback, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TranscriptForm from "@/components/TranscriptForm";
+import TranscriptResult from "@/components/TranscriptResult";
 import PricingCard from "@/components/PricingCard";
-import { PricingPlan } from "@/types";
+import { PricingPlan, TranscriptApiResponse } from "@/types";
 
 const plans: PricingPlan[] = [
   {
@@ -95,6 +99,41 @@ const features = [
 ];
 
 export default function Home() {
+  const [result, setResult] = useState<TranscriptApiResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const handleResult = useCallback((data: TranscriptApiResponse) => {
+    setResult(data);
+    setError(null);
+    setShowResult(false);
+    setTimeout(() => setShowResult(true), 50);
+  }, []);
+
+  const handleLoading = useCallback((loading: boolean) => {
+    setIsLoading(loading);
+    if (loading) {
+      setResult(null);
+      setShowResult(false);
+    }
+  }, []);
+
+  const handleError = useCallback((err: string | null) => {
+    setError(err);
+    if (err) {
+      setResult(null);
+      setShowResult(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showResult && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showResult]);
+
   return (
     <>
       <Header />
@@ -112,10 +151,35 @@ export default function Home() {
               유튜브 URL만 붙여넣으면 자막 추출 + AI 요약을 한번에
             </p>
             <div className="mt-10">
-              <TranscriptForm />
+              <TranscriptForm
+                onResult={handleResult}
+                onLoading={handleLoading}
+                onError={handleError}
+                isLoading={isLoading}
+              />
             </div>
+
+            {error && (
+              <div className="mt-6 mx-auto max-w-2xl rounded-xl bg-red-50 border border-red-200 px-5 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
           </div>
         </section>
+
+        {/* Result */}
+        {result && (
+          <section
+            ref={resultRef}
+            className={`pb-16 px-4 sm:px-6 transition-all duration-500 ease-out ${
+              showResult
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <TranscriptResult data={result} />
+          </section>
+        )}
 
         {/* How it Works */}
         <section id="how-it-works" className="py-20 md:py-28 bg-white">

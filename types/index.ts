@@ -4,11 +4,19 @@ export interface TranscriptEntry {
   duration: number;
 }
 
-export interface TranscriptResponse {
+export interface TranscriptApiResponse {
+  success: true;
   videoId: string;
   title: string;
   transcript: TranscriptEntry[];
+  fullText: string;
   language: string;
+}
+
+export interface TranscriptApiError {
+  success: false;
+  message: string;
+  code: "INVALID_URL" | "NO_TRANSCRIPT" | "SERVER_ERROR";
 }
 
 export interface SummaryResponse {
@@ -18,11 +26,9 @@ export interface SummaryResponse {
 }
 
 export interface VideoInfo {
-  id: string;
   title: string;
   thumbnail: string;
-  duration: string;
-  channel: string;
+  author: string;
 }
 
 export type PricingTier = "free" | "pro" | "team";
@@ -35,9 +41,4 @@ export interface PricingPlan {
   features: string[];
   cta: string;
   highlighted?: boolean;
-}
-
-export interface ApiError {
-  message: string;
-  code: string;
 }

@@ -1,30 +1,41 @@
-export function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
-    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-
-  return null;
-}
-
-export function formatTimestamp(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  }
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
+import { TranscriptEntry } from "@/types";
+import { formatSRTTimestamp } from "@/lib/youtube";
 
 export function cn(...classes: (string | undefined | false)[]): string {
   return classes.filter(Boolean).join(" ");
+}
+
+export function generateSRT(entries: TranscriptEntry[]): string {
+  return entries
+    .map((entry, i) => {
+      const startTime = formatSRTTimestamp(entry.start);
+      const endTime = formatSRTTimestamp(entry.start + entry.duration);
+      return `${i + 1}\n${startTime} --> ${endTime}\n${entry.text}\n`;
+    })
+    .join("\n");
+}
+
+export function generateTXT(entries: TranscriptEntry[], withTimestamp = false): string {
+  if (!withTimestamp) {
+    return entries.map((e) => e.text).join(" ");
+  }
+  return entries
+    .map((e) => {
+      const h = Math.floor(e.start / 3600);
+      const m = Math.floor((e.start % 3600) / 60);
+      const s = Math.floor(e.start % 60);
+      const ts = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+      return `[${ts}] ${e.text}`;
+    })
+    .join("\n");
+}
+
+export function downloadFile(content: string, filename: string) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
