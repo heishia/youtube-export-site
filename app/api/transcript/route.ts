@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     const response = NextResponse.json({
-      success: true,
+      success: true as const,
       videoId,
       title: videoInfo.title,
       transcript: entries,

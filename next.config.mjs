@@ -14,8 +14,13 @@ const nextConfig = {
         protocol: "https",
         hostname: "i.ytimg.com",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
     ],
   },
+  output: "standalone",
 };
 
 export default nextConfig;

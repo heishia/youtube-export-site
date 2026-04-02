@@ -1,12 +1,17 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TranscriptForm from "@/components/TranscriptForm";
-import TranscriptResult from "@/components/TranscriptResult";
 import PricingCard from "@/components/PricingCard";
 import { PricingPlan, TranscriptApiResponse } from "@/types";
+
+const TranscriptResult = dynamic(
+  () => import("@/components/TranscriptResult"),
+  { ssr: false }
+);
 
 const plans: PricingPlan[] = [
   {

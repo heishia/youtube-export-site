@@ -1,0 +1,11 @@
+feat: Railway 배포 준비 + SEO/성능 최적화
+
+- .env.example 생성 (환경변수 템플릿)
+- README.md 작성 (소개, 기술스택, 로컬 실행, 환경변수, 배포 방법, 구조)
+- railway.toml 배포 설정 (nixpacks + prisma db push + standalone)
+- next.config.mjs: output: "standalone" 추가 (Docker/Railway 최적화)
+- SEO: robots.ts, sitemap.ts (Next.js 네이티브), OG/Twitter 메타태그
+- layout.tsx: metadataBase, title template, OG image, Twitter card
+- 각 페이지별 메타데이터 (로그인, 대시보드)
+- 성능: TranscriptResult 동적 import (코드 스플리팅), 폰트 display: swap
+- package.json: build에 prisma generate 추가, postinstall 훅
