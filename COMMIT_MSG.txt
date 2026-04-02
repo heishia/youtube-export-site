@@ -1,8 +1,0 @@
-feat: 유튜브 자막 추출 기능 전체 구현 (백엔드 API + 프론트 UI)
-
-- youtube-transcript 패키지로 자막 추출 API 구현 (한국어 > 영어 > 자동생성 순서 폴백)
-- lib/youtube.ts: extractVideoId, formatTimestamp, getVideoInfo(oEmbed), fetchTranscript
-- 다양한 URL 형식 지원 (watch, youtu.be, shorts, embed)
-- TranscriptForm: URL 붙여넣기 시 자동 추출, 로딩 스피너, 에러 처리
-- TranscriptResult: 타임스탬프/전체텍스트 탭, 키워드 검색 하이라이트, 전체 복사, TXT/SRT 다운로드
-- page.tsx: 추출 결과 슬라이드업 등장 + 자동 스크롤
