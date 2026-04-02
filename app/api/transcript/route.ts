@@ -1,8 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { extractVideoId, fetchTranscript, getVideoInfo } from "@/lib/youtube";
+import { checkUsageLimit, incrementUsage, checkAnonUsage } from "@/lib/usage";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    let anonUsageResult: ReturnType<typeof checkAnonUsage> | null = null;
+
+    if (session?.user?.id) {
+      const usage = await checkUsageLimit(session.user.id);
+      if (!usage.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `일일 사용 한도(${usage.limit}회)를 초과했습니다. Pro로 업그레이드하면 무제한으로 사용할 수 있습니다.`,
+            code: "USAGE_LIMIT",
+          },
+          { status: 402 }
+        );
+      }
+    } else {
+      const cookieValue = req.cookies.get("sg_anon_usage")?.value;
+      anonUsageResult = checkAnonUsage(cookieValue);
+      if (!anonUsageResult.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "비로그인 사용자의 일일 한도(3회)를 초과했습니다. 로그인하면 더 많이 사용할 수 있습니다.",
+            code: "USAGE_LIMIT",
+          },
+          { status: 402 }
+        );
+      }
+    }
+
     const { url } = await req.json();
 
     if (!url || typeof url !== "string") {
@@ -43,7 +77,16 @@ export async function POST(req: NextRequest) {
 
     const fullText = entries.map((e) => e.text).join(" ");
 
-    return NextResponse.json({
+    if (session?.user?.id) {
+      await incrementUsage(session.user.id, {
+        videoId,
+        videoTitle: videoInfo.title,
+        language,
+        charCount: fullText.length,
+      });
+    }
+
+    const response = NextResponse.json({
       success: true,
       videoId,
       title: videoInfo.title,
@@ -51,6 +94,17 @@ export async function POST(req: NextRequest) {
       fullText,
       language,
     });
+
+    if (!session?.user?.id && anonUsageResult) {
+      response.cookies.set("sg_anon_usage", anonUsageResult.newCookieValue, {
+        httpOnly: true,
+        maxAge: 86400,
+        sameSite: "lax",
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : "";
 
