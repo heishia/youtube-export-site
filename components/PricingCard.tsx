@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { PricingPlan } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +11,44 @@ interface PricingCardProps {
 }
 
 export default function PricingCard({ plan }: PricingCardProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (plan.tier === "free") {
+      router.push("/auth/signin");
+      return;
+    }
+
+    if (!session?.user) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    if (session.user.plan === plan.tier.toUpperCase()) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/lemonsqueezy/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan.tier }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      alert("결제 페이지 이동에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isCurrentPlan =
+    session?.user?.plan === plan.tier.toUpperCase();
+
   return (
     <div
       className={cn(
@@ -50,14 +93,19 @@ export default function PricingCard({ plan }: PricingCardProps) {
       </ul>
 
       <button
+        onClick={handleClick}
+        disabled={loading || isCurrentPlan}
         className={cn(
           "w-full rounded-lg py-3 text-sm font-semibold transition-colors",
-          plan.highlighted
-            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-            : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+          isCurrentPlan
+            ? "bg-gray-100 text-gray-400 cursor-default"
+            : plan.highlighted
+              ? "bg-indigo-600 text-white hover:bg-indigo-700"
+              : "bg-gray-100 text-gray-900 hover:bg-gray-200",
+          loading && "opacity-60 cursor-not-allowed"
         )}
       >
-        {plan.cta}
+        {loading ? "이동 중..." : isCurrentPlan ? "현재 플랜" : plan.cta}
       </button>
     </div>
   );
